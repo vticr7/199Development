@@ -8,7 +8,7 @@
 import SwiftUI
 import FirebaseCore
 @main
-struct ActiveVibeApp: App {
+struct Mobilicius: App {
     init(){
         FirebaseApp.configure()
     }

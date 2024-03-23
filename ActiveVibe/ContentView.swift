@@ -6,12 +6,24 @@
 //
 
 import SwiftUI
-
+import FirebaseAuth
 struct ContentView: View {
+    @AppStorage("uid") var userID:String = ""
     var body: some View {
-       AuthView()
+       
+        if (userID == ""){
+            OnBoarding()
+        }
+        else{
+            HomeView()
+            
+                
+            }
+        
+        
         
     }
+        
 }
 
 #Preview {

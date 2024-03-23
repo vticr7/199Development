@@ -1,128 +1,75 @@
-//
-//  LoginView.swift
-//  ActiveVibe
-//
-//  Created by Vaibhav  Tiwary on 09/01/24.
-//
-
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
-    @Binding var CurrentShowingView:String
-    @State private var email:String=""
-    @State private var password:String=""
-    private func validPassword(_password:String) -> Bool{
+    @Binding var currentShowingView: String
+    @AppStorage("uid") var userID: String = ""
+    @State private var email: String = ""
+    @State private var password: String = ""
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+
+    private func isValidPassword(_ password: String) -> Bool {
         let passwordRegex = NSPredicate(format: "SELF MATCHES %@", "^(?=.*[a-z])(?=.*[$@$#!%*?&])(?=.*[A-Z]).{6,}$")
-        
-        return passwordRegex.evaluate(with: password)}
+        return passwordRegex.evaluate(with: password)
+    }
+
     var body: some View {
-        
         ZStack {
-            VStack
-            {
-                Image("Login")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 500, height: 350)
-                    .offset(y:-110)
-                
-                HStack{
-                    Text("Welcome")
-                        .font(.largeTitle)
-                        .bold()
-                        .offset(y:-175)
-                    Spacer()
-                }
-                
-                VStack{
-                   HStack{
-                    Image(systemName: "mail")
-                    TextField("Email",text:$email)
-                       if (email.count != 0){
-                           
-                           Image(systemName: email.isValidEmail() ? "checkmark":"xmark")
-                               .fontWeight(.bold)
-                               .foregroundColor(email.isValidEmail() ? .green:.red)
-                       }
-                }
-                .padding()
-                .overlay{
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(lineWidth: 3)
-                        .foregroundColor(.black)
-                    
-                }
-                .padding()
-                
-                HStack{
-                    Image(systemName: "lock")
-                    SecureField("Password",text:$password)
-                    
-                    if(password.count != 0){
-                        Image(systemName:validPassword(_password:password) ? "checkmark":"xmark")
-                            .fontWeight(.bold)
-                            .foregroundColor(validPassword(_password:password) ? .green:.red)
-                    }
-                }
-                .padding()
-                .overlay{
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(lineWidth: 3)
-                        .foregroundColor(.black)
-                    
-                }
-                .padding()
-                
-                    Button(action: {
-                        withAnimation {
-                            self.CurrentShowingView="signup"
-                        }
-                        
-                    }, label: {
-                    Text("Don't have an account?")
-                        .foregroundColor(.blue.opacity(0.8))
-                    
-                })
-                   
-               }
-               .offset(y:-150)
+            // Background
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.blue]), startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+
+            VStack(spacing: 20) {
                 Spacer()
-                
+                Text("Welcome Back")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+
+                // Email Field
+                CustomTextField(image: "mail", placeholder: "Email", text: $email, isValid: email.isValidEmail())
+
+                // Password Field
+                CustomSecureField(image: "lock", placeholder: "Password", text: $password, isValid: isValidPassword(password))
+
+                // Sign In Button
+                Button(action: signIn) {
+                    Text("Sign In")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.vertical)
+                        .frame(maxWidth: .infinity)
+                        .background(Capsule().fill(Color.black.opacity(0.6)))
+                        .padding(.horizontal)
+                }
+
+                // Navigation to Sign Up
+                Button(action: { currentShowingView = "signup" }) {
+                    Text("Don't have an account? Sign Up")
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+
                 Spacer()
-                Button{} 
-                    label: {
-                            Text("Sign In")
-                            .foregroundColor(.white)
-                            .font(.title3)
-                            .bold()
-                            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
-                            .padding()
-                            .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.blue)
-                            )
-                            .padding(.horizontal)
-                        
-                    
-                    }
-                    
-                    
-                
-                
-                
-                
-               
-                
             }
-            
-            
-            
-            
-            
+            .padding()
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Login Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
         }
-            
-        .padding()
+    }
+
+    private func signIn() {
+        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+            if let error = error {
+                alertMessage = error.localizedDescription
+                showAlert = true
+                return
+            }
+            if let authResult = authResult {
+                userID = authResult.user.uid
+            }
+        }
     }
 }
-   
-
